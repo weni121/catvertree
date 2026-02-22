@@ -1,5 +1,5 @@
-
 <?php
+session_start();
 include '../config.php';
 
 if (!isset($_SESSION['admin_id'])) {
@@ -16,10 +16,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $care = $_POST['care'];
     $is_visible = $_POST['is_visible'];
 
-    // =========================
-    // 1️⃣ INSERT แมว
-    // =========================
-    $stmt = $conn->prepare("INSERT INTO cats_edit (name_th, name_en, description, characteristics, care, is_visible) VALUES (?, ?, ?, ?, ?, ?)");
+    /* 1️⃣ เพิ่มแมว */
+    $stmt = $conn->prepare("
+        INSERT INTO cats_edit 
+        (name_th, name_en, description, characteristics, care, is_visible) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+
     $stmt->bind_param(
         "sssssi",
         $name_th,
@@ -35,17 +38,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $cat_id = $conn->insert_id;
         $stmt->close();
 
-        // =========================
-        // 2️⃣ อัปโหลดรูป (หลายรูป)
-        // =========================
-
+        /* 2️⃣ อัปโหลดหลายรูป */
         if (!empty($_FILES['image']['name'][0])) {
 
             $uploadDir = __DIR__ . "/../uploads/";
-
-            if (!is_dir($uploadDir)) {
-                die("Uploads folder not found.");
-            }
 
             foreach ($_FILES['image']['name'] as $key => $name) {
 
@@ -56,9 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $safeName = preg_replace("/[^a-zA-Z0-9\._-]/", "", $name);
                     $newName = time() . "_" . uniqid() . "_" . $safeName;
 
-                    $targetPath = $uploadDir . $newName;
-
-                    if (move_uploaded_file($tmp, $targetPath)) {
+                    if (move_uploaded_file($tmp, $uploadDir . $newName)) {
 
                         $stmtImg = $conn->prepare("
                             INSERT INTO cat_images (cat_id, image_name)
@@ -84,36 +78,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <?php include 'header.php'; ?>
 
-<div class="container">
-<h2>เพิ่มสายพันธุ์แมว</h2>
+<h2 style="text-align:center;">เพิ่มสายพันธุ์แมว</h2>
 
-<form method="post" enctype="multipart/form-data">
+<div class="form-wrapper">
+<form method="POST" enctype="multipart/form-data">
 
-ชื่อไทย
-<input type="text" name="name_th" required>
+    <div class="form-group">
+        <label>ชื่อไทย</label>
+        <input type="text" name="name_th" required>
+    </div>
 
-ชื่ออังกฤษ
-<input type="text" name="name_en">
+    <div class="form-group">
+        <label>ชื่ออังกฤษ</label>
+        <input type="text" name="name_en">
+    </div>
 
-รายละเอียด
-<textarea name="description"></textarea>
+    <div class="form-group">
+        <label>รายละเอียด</label>
+        <textarea name="description"></textarea>
+    </div>
 
-ลักษณะทั่วไป
-<textarea name="characteristics"></textarea>
+    <div class="form-group">
+        <label>ลักษณะทั่วไป</label>
+        <textarea name="characteristics"></textarea>
+    </div>
 
-การเลี้ยงดู
-<textarea name="care"></textarea>
+    <div class="form-group">
+        <label>การเลี้ยงดู</label>
+        <textarea name="care"></textarea>
+    </div>
 
-รูปภาพ
-<input type="file" name="image[]" multiple>
+    <div class="form-group">
+        <label>รูปภาพ (เลือกได้หลายรูป)</label>
+        <input type="file" name="image[]" multiple>
+    </div>
 
-สถานะ
-<select name="is_visible">
-    <option value="1">แสดง</option>
-    <option value="0">ซ่อน</option>
-</select>
+    <div class="form-group">
+        <label>สถานะ</label>
+        <select name="is_visible">
+            <option value="1">แสดง</option>
+            <option value="0">ซ่อน</option>
+        </select>
+    </div>
 
-<button type="submit">บันทึก</button>
+    <div class="form-actions">
+        <button type="submit" class="btn">บันทึก</button>
+    </div>
+
 </form>
 </div>
 

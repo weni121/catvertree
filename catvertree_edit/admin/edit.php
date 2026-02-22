@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+session_start();
 include '../config.php';
 
 if (!isset($_SESSION['admin_id'])) {
@@ -6,11 +9,13 @@ if (!isset($_SESSION['admin_id'])) {
     exit();
 }
 
+$id = intval($_GET['id']);
 
-$id = $_GET['id'];
+/* ดึงข้อมูลเดิม */
 $result = $conn->query("SELECT * FROM cats_edit WHERE id=$id");
 $row = $result->fetch_assoc();
 
+/* อัปเดตข้อมูล */
 if(isset($_POST['update'])){
 
     $name_th = $_POST['name_th'];
@@ -20,100 +25,74 @@ if(isset($_POST['update'])){
     $care = $_POST['care'];
     $is_visible = $_POST['is_visible'];
 
-    if($_FILES['image']['name'] != ""){
-        $image = $_FILES['image']['name'];
-        move_uploaded_file($_FILES['image']['tmp_name'], "../uploads/".$image);
-    } else {
-        $image = $row['image_url'];
-    }
+    
 
-    $sql = "UPDATE CatBreeds_API SET
-        name_th='$name_th',
-        name_en='$name_en',
-        description='$description',
-        characteristics='$characteristics',
-        care_instructions='$care',
-        image_url='$image',
-        is_visible='$is_visible'
-        WHERE id=$id";
+    $sql = "UPDATE cats_edit SET
+    name_th='$name_th',
+    name_en='$name_en',
+    description='$description',
+    characteristics='$characteristics',
+    care='$care',
+    is_visible='$is_visible'
+    WHERE id=$id";
 
     $conn->query($sql);
     header("Location: index.php");
+    exit();
 }
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>แก้ไขข้อมูล</title>
-<style>
-body{
-    font-family:Segoe UI;
-    background:linear-gradient(135deg,#e6ccff,#ffcce6);
-}
-.container{
-    width:600px;
-    margin:50px auto;
-    background:white;
-    padding:30px;
-    border-radius:20px;
-}
-input,textarea,select{
-    width:100%;
-    padding:8px;
-    margin:8px 0;
-}
-button{
-    background:#ff99cc;
-    color:white;
-    padding:10px 20px;
-    border:none;
-    border-radius:20px;
-}
-img{
-    width:120px;
-    border-radius:10px;
-}
-</style>
-</head>
-<body>
+<?php include 'header.php'; ?>
 
-<div class="container">
-<h2>แก้ไขสายพันธุ์</h2>
+<h2 style="text-align:center;">แก้ไขข้อมูลสายพันธุ์แมว</h2>
 
-<form method="post" enctype="multipart/form-data">
+<div class="form-wrapper">
+<form method="POST" enctype="multipart/form-data">
 
-ชื่อไทย
-<input type="text" name="name_th" value="<?php echo $row['name_th']; ?>">
+    <div class="form-group">
+        <label>ชื่อไทย</label>
+        <input type="text" name="name_th" value="<?php echo $row['name_th']; ?>" required>
+    </div>
 
-ชื่ออังกฤษ
-<input type="text" name="name_en" value="<?php echo $row['name_en']; ?>">
+    <div class="form-group">
+        <label>ชื่ออังกฤษ</label>
+        <input type="text" name="name_en" value="<?php echo $row['name_en']; ?>" required>
+    </div>
 
-รายละเอียด
-<textarea name="description"><?php echo $row['description']; ?></textarea>
+    <div class="form-group">
+        <label>รายละเอียด</label>
+        <textarea name="description"><?php echo $row['description']; ?></textarea>
+    </div>
 
-ลักษณะทั่วไป
-<textarea name="characteristics"><?php echo $row['characteristics']; ?></textarea>
+    <div class="form-group">
+        <label>ลักษณะทั่วไป</label>
+        <textarea name="characteristics"><?php echo $row['characteristics']; ?></textarea>
+    </div>
 
-การเลี้ยงดู
-<textarea name="care"><?php echo $row['care_instructions']; ?></textarea>
+    <div class="form-group">
+        <label>การเลี้ยงดู</label>
+        <textarea name="care"><?php echo $row['care']; ?></textarea>
+    </div>
 
-รูปปัจจุบัน<br>
-<img src="../uploads/<?php echo $row['image_url']; ?>"><br><br>
+    <div class="form-group">
+        <label>เปลี่ยนรูป</label>
+        <input type="file" name="image">
+        <br><br>
+    </div>
 
-เปลี่ยนรูป
-<input type="file" name="image">
+    <div class="form-group">
+        <label>สถานะ</label>
+        <select name="is_visible">
+            <option value="1" <?php if($row['is_visible']==1) echo 'selected'; ?>>แสดง</option>
+            <option value="0" <?php if($row['is_visible']==0) echo 'selected'; ?>>ซ่อน</option>
+        </select>
+    </div>
 
-สถานะ
-<select name="is_visible">
-    <option value="1" <?php if($row['is_visible']==1) echo "selected"; ?>>แสดง</option>
-    <option value="0" <?php if($row['is_visible']==0) echo "selected"; ?>>ซ่อน</option>
-</select>
+    <div class="form-actions">
+        <button type="submit" name="update" class="btn">อัปเดต</button>
+    </div>
 
-<button type="submit" name="update">อัปเดต</button>
 </form>
 </div>
 
-</body>
-</html>
+<?php include 'footer.php'; ?>

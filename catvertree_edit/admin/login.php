@@ -8,5 +8,10 @@
     Password: <input type="password" name="password" required><br><br>
     <button type="submit" class="btn">Login</button>
 </form>
+<?php
+if (password_verify($password, $row['password'])) {
+    $_SESSION['admin_id'] = $row['id'];
+}
+?>
 
 <?php include 'footer.php'; ?>
